@@ -34,17 +34,27 @@ Derrick Lam <dlam012@ucr.edu>
 
 >> A2: Briefly describe what happens in a call to timer_sleep(),
 >> including the effects of the timer interrupt handler.
-The goal of timer_sleep() is to stop executing the current thread for x-number of ticks. After a set amount of ticks, the thread is then placed on a ready list.
+The goal of timer_sleep() is to stop executing the current thread 
+for x-number of ticks. We place the thread onto a list of blocked 
+threads. After a set amount of ticks, the thread is unblocked and
+then placed on a ready list.
+
 >> A3: What steps are taken to minimize the amount of time spent in
 >> the timer interrupt handler?
+The implementation of the block and ready list are what minimizes 
+the amount of time spent in the timer interrupt handler.
 
 ---- SYNCHRONIZATION ----
 
 >> A4: How are race conditions avoided when multiple threads call
 >> timer_sleep() simultaneously?
+The lists would hadle that as long as the threads are ordered.
+Disable interupts during the block process so that conflicts do not 
+happen. We make sure that interupts are disabled by assert statements.
 
 >> A5: How are race conditions avoided when a timer interrupt occurs
 >> during a call to timer_sleep()?
+We make sure that interupts are disabled by assert statements.
 
 ---- RATIONALE ----
 
