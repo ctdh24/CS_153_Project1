@@ -343,6 +343,7 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
+  //if (thread_current ()->priority != "highest") thread_yield();
   thread_current ()->priority = new_priority;
 }
 
@@ -350,6 +351,7 @@ thread_set_priority (int new_priority)
 int
 thread_get_priority (void) 
 {
+  //if (thread ()->priority < donated_priority) return donated_priority
   return thread_current ()->priority;
 }
 
