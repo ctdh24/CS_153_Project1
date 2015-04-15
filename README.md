@@ -1,17 +1,18 @@
 # CS_153_Project1
 
 Instructor: Dr. Zhiyun Qian
+
 TA: Joshua Frear
 
-Course description:
+###Course description:
 
 Covers the principles and practice of operating system design. Includes concurrency, memory management, file systems, protection, security, command languages, scheduling, and system performance. 
 
-Project description:
+###Project description:
 
 Extend the functionality of this system to gain a better understanding of synchronization problems based upon a minimally functional thread system.
 
-Class links:
+###Class links:
 
 Piazza                  https://piazza.com/class/i7qf1f0ciku2bh 
 
