@@ -34,7 +34,7 @@ Derrick Lam <dlam012@ucr.edu>
 
 >> A2: Briefly describe what happens in a call to timer_sleep(),
 >> including the effects of the timer interrupt handler.
-
+The goal of timer_sleep() is to stop executing the current thread for x-number of ticks. After a set amount of ticks, the thread is then placed on a ready list.
 >> A3: What steps are taken to minimize the amount of time spent in
 >> the timer interrupt handler?
 
