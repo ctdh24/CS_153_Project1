@@ -60,6 +60,10 @@ We make sure that interupts are disabled by assert statements.
 
 >> A6: Why did you choose this design?  In what ways is it superior to
 >> another design you considered?
+We chose to minimize the interupt times through the implementation of a 
+wait and ready list. Blocking threads avoid waiting for ticks if we had 
+still implemented thread_yield(). The implementation of list objects 
+avoids waiting conflicts.
 
 			 PRIORITY SCHEDULING
 			 ===================
