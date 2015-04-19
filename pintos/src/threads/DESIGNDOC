@@ -132,19 +132,19 @@ higher up in the ready queue.
 >> how your implementation avoids it.  Can you use a lock to avoid
 >> this race?
 
-It is important to avoid race conditions when setting a thread's priority
-and as a result, we did stuff
-
-We have to implement the function to allow a thread to modify its own 
-priority. Given this, there could be a race condition should two or
-more threads simultaneously call this function in order to set their own 
-priorty as the highest priority. The use of lock may avoid this.
+There is a possibility for a race condition when calling thread_set_priority()
+during the period when a thread is the process of restoring its own priority
+when any donated priority from a locked thread is released. The inverse needs to
+be handled as well, because if the thread's priority is increased, any donation
+must be based on this new priority. The type of lock that needs to be used has to be 
+on a thread-by-thread basis.
 
 ---- RATIONALE ----
 
 >> B7: Why did you choose this design?  In what ways is it superior to
 >> another design you considered?
 
+This design choice of using 
 			  ADVANCED SCHEDULER
 			    (If Attempted)
 			  ==================
