@@ -28,6 +28,15 @@ Derrick Lam <dlam012@ucr.edu> <861005721>
 >> `struct' member, global or static variable, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
 
+thread_foreach()
+	Modified to be called during the interrupt so that the list of
+	threads is cycled through and each thread is waken up at the
+	correct time
+timer_sleep()
+	Modified to only block the thread upon execution of the function.
+	Unblocking will then be handled by the interrupt calling thread_foreach()
+timer_interrupt()
+	Modified to unblock threads as well as keep track of ticks.
 
 ---- ALGORITHMS ----
 
@@ -102,7 +111,7 @@ thread_set_priority()
 	Changed to include locks to avoid possible race conditions when setting
 	priority happens at the same time a lock is removed. 
 thread_get_priority()
-	The higher value between priority and donated_priority is returned
+	The higher value between priority and donated_priority is returned.
 
 >> B2: Explain the data structure used to track priority donation.
 >> Use ASCII art to diagram a nested donation.  (Alternately, submit a
@@ -174,7 +183,12 @@ on a thread-by-thread basis.
 >> B7: Why did you choose this design?  In what ways is it superior to
 >> another design you considered?
 
-Another considered design is to 
+This particular decision to keep the priority list sorted is a better implementation
+than leaving it unsorted and having to constantly search through the entire list
+for the thread with the highest priority. This will be especially beneficial
+in the case where there are numerous threads and traversing through the list becomes
+a significant computational task.
+
 			  ADVANCED SCHEDULER
 			    (If Attempted)
 			  ==================
