@@ -94,11 +94,23 @@ a thread to unblock.
 >> `struct' member, global or static variable, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
 
+int donated_priority
+	Included in thread.h to ensure that the priority variable is not overwritten
+	when the thread is donated to. 
+
+thread_set_priority()
+	Changed to include locks to avoid possible race conditions when setting
+	priority happens at the same time a lock is removed. 
+thread_get_priority()
+	The higher value between priority and donated_priority is returned
+
 >> B2: Explain the data structure used to track priority donation.
 >> Use ASCII art to diagram a nested donation.  (Alternately, submit a
 >> .png file.)
+
 A thread on the waiting list will donate it's priority to a thread on 
 the ready list that it is waiting on to run first.
+
 ==========Before==========
 Ready List    Waiting list
 P2 [mid]      P3 [high]-
@@ -110,6 +122,11 @@ Ready List    Waiting list
 P1 [high]<--  P3 [high]
             |____|  
 P2 [mid]
+
+In this example, P2 is initially the thread with the highest priority,
+and as a result, is next to begin running. However, due to P3 waiting on
+P1, and P3 having a high priority, P1's priority is upgraded to what P3's is,
+and the order in the ready list is updated to reflect this.
 
 ---- ALGORITHMS ----
 
@@ -157,7 +174,7 @@ on a thread-by-thread basis.
 >> B7: Why did you choose this design?  In what ways is it superior to
 >> another design you considered?
 
-This design choice of using 
+Another considered design is to 
 			  ADVANCED SCHEDULER
 			    (If Attempted)
 			  ==================
