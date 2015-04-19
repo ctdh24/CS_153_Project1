@@ -97,6 +97,19 @@ a thread to unblock.
 >> B2: Explain the data structure used to track priority donation.
 >> Use ASCII art to diagram a nested donation.  (Alternately, submit a
 >> .png file.)
+A thread on the waiting list will donate it's priority to a thread on 
+the ready list that it is waiting on to run first.
+==========Before==========
+Ready List    Waiting list
+P2 [mid]      P3 [high]-
+                       |
+P1 [low]<---------------
+
+==========After===========
+Ready List    Waiting list
+P1 [high]<--  P3 [high]
+            |____|  
+P2 [mid]
 
 ---- ALGORITHMS ----
 
