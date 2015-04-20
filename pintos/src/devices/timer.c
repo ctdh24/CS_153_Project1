@@ -100,14 +100,14 @@ timer_sleep (int64_t ticks)
 
   ASSERT (intr_get_level () == INTR_ON);
   // disable interrupts to block thread
-  // 	curState = intr_disable() 
+  curState = intr_disable() 
   // add thread t to a list of sleeping threads
   // 	
   // can order list by awakeTime
   // put thread to sleep -> Block()
-  // 	t.thread_block();
-  while (timer_elapsed (start) < ticks) 
-    thread_yield ();
+  t.thread_block();
+  //while (timer_elapsed (start) < ticks) 
+  // thread_yield ();
 
 }
 
