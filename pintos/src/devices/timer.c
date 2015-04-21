@@ -30,8 +30,9 @@ static void busy_wait (int64_t loops);
 static void real_time_sleep (int64_t num, int32_t denom);
 static void real_time_delay (int64_t num, int32_t denom);
 
-// List of sleeping threads
+// create & initialize a list of sleeping threads
 struct list sleep_list;
+list_init(sleep_list);
 
 /* Sets up the timer to interrupt TIMER_FREQ times per second,
    and registers the corresponding interrupt. */
@@ -96,17 +97,22 @@ timer_sleep (int64_t ticks)
   int64_t start = timer_ticks();
   // get thread
   struct thread *t = thread_current();
-  // 	awakeTime;
 
   ASSERT (intr_get_level () == INTR_ON);
   // disable interrupts to block thread
   enum intr_level old_level = intr_disable ();
-  // TODO: implement a wakeup tick variable to each thread
   // set t's wakeup tick
-  // t->wakeup_time = start + ticks;
+  t->thread_set_ticks(start+ticks);
 
-  // TODO: add thread t to a list of sleeping threads
-  // order list by wakeup tick
+  // add thread t to a list of sleeping threads sorted by sleep duration
+  struct list_elem * e;
+  for (e = list_begin(&sleep_list); e != list_end(&sleepList); e = list_next(e)){
+      //Notice one parameter is the struct thread (or whatever you're using)
+      struct thread *t = list_entry (e, struct thread, listElem1);
+      //(can use other lists by switching which elem is used); 
+  }
+  
+  sleep_list.push_back(&t);
 
   // block thread until woken
   t.thread_block();
@@ -194,10 +200,13 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick();
-  // look through blocked thread list
-  // assuming list is sorted, check first thread
-  // compare thread t awakeTime to ticks
-  // if time to awake, unblock() and move from sleeping list to ready list
+  // while(true){
+  // // look through blocked thread list
+  // // assuming list is sorted, check first thread
+  // // compare thread t awakeTime to ticks
+  // // if time to awake, unblock() and move from sleeping list to ready list  
+  // }
+
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer

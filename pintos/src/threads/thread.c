@@ -49,6 +49,7 @@ struct kernel_thread_frame
 static long long idle_ticks;    /* # of timer ticks spent idle. */
 static long long kernel_ticks;  /* # of timer ticks in kernel threads. */
 static long long user_ticks;    /* # of timer ticks in user programs. */
+static long long sleep_ticks;   // tick # to awake in timer.c
 
 /* Scheduling. */
 #define TIME_SLICE 4            /* # of timer ticks to give each thread. */
@@ -70,6 +71,7 @@ static void *alloc_frame (struct thread *, size_t size);
 static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
+
 
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
@@ -353,6 +355,10 @@ thread_get_priority (void)
 {
   //if (thread ()->priority < donated_priority) return donated_priority
   return thread_current ()->priority;
+}
+
+int thread_set_sleep(int64_t ticks){
+  thread_current()->sleep_ticks = ticks;
 }
 
 /* Sets the current thread's nice value to NICE. */
