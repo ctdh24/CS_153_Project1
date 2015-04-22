@@ -31,9 +31,8 @@ static void real_time_sleep (int64_t num, int32_t denom);
 static void real_time_delay (int64_t num, int32_t denom);
 
 // create & initialize a list of sleeping threads
-struct list_elem *e;
-struct list sleep_list;
-list_init(&sleep_list);
+static struct list sleep_list;
+//list_init(&sleep_list);
 
 /* Sets up the timer to interrupt TIMER_FREQ times per second,
    and registers the corresponding interrupt. */
@@ -103,23 +102,24 @@ timer_sleep (int64_t ticks)
   // disable interrupts to block thread
   enum intr_level old_level = intr_disable ();
   // set t's wakeup tick
-  st->thread_set_sleep(start+ticks);
-
+  st->sleep_ticks = (start+ticks);
+  struct list_elem *e;
+  // insert current thread into sleep_list sorted by sleep time 
   for(e = list_begin(&sleep_list); e != list_end(&sleep_list); e = list_next(e)){
     //Notice one parameter is the struct thread (or whatever you're using)
-    // list element -> list entry -> thread
-    struct thread *t = list_entry (e, struct thread, list_elem);
+    // list -> list element -> list entry -> thread
+    struct thread *t = list_entry (e, struct thread, elem);
     // handle if inserting as head
 
     // thread -> list element
-    if(start+ticks <= t->thread_get_sleep()){
-      if(t->is_head()){
-        list_push_front(&sleep_list, ts);
-        t->block();
+    if(start+ticks <= t->sleep_ticks){
+      if(e == list_begin(&sleep_list)){
+        list_push_front(&sleep_list, &st->elem);
+        thread_block();
         break;
       }
-      list_insert(t, st)
-      t->block();
+      list_insert(e, thread_current());
+      thread_block();
       break;
     }
     //(can use other lists by switching which elem is used); 
@@ -128,6 +128,7 @@ timer_sleep (int64_t ticks)
     // compare thread t awakeTime to ticks
     // if time to awake, unblock() and move from sleeping list to ready list  
   }
+/*
   // TODO: add thread t to a list of sleeping threads sorted by sleep duration
   list_push_front(&sleep_list, struct list_elem *temp = t);
 
@@ -140,7 +141,7 @@ timer_sleep (int64_t ticks)
   // OLD CODE
   //while (timer_elapsed (start) < ticks) 
   // thread_yield ();
-
+*/
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -226,10 +227,10 @@ timer_interrupt (struct intr_frame *args UNUSED)
   struct list_elem * e;
   for (e = list_begin(&sleep_list); e != list_end(&sleep_list); e = list_next(e)){
     //Notice one parameter is the struct thread (or whatever you're using)
-    struct thread *t = list_entry (e, struct thread, list_elem);
-    if(tick >= t->thread_get_sleep()){
-      t->thread_set_ticks(0);
-      t->unblock();
+    struct thread *t = list_entry (e, struct thread, elem);
+    if(tick >= t->sleep_ticks){
+      t->sleep_ticks = 0;
+      thread_unblock(t);
       list_remove(e);
       break;
     }
