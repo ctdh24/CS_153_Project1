@@ -33,7 +33,7 @@ static void real_time_delay (int64_t num, int32_t denom);
 // create & initialize a list of sleeping threads
 struct list_elem *e;
 struct list sleep_list;
-list_init(sleep_list);
+list_init(&sleep_list);
 
 /* Sets up the timer to interrupt TIMER_FREQ times per second,
    and registers the corresponding interrupt. */
@@ -114,7 +114,7 @@ timer_sleep (int64_t ticks)
     // thread -> list element
     if(start+ticks <= t->thread_get_sleep()){
       if(t->is_head()){
-        list_push_front(sleep_list, ts);
+        list_push_front(&sleep_list, ts);
         t->block();
         break;
       }
