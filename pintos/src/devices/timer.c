@@ -31,6 +31,7 @@ static void real_time_sleep (int64_t num, int32_t denom);
 static void real_time_delay (int64_t num, int32_t denom);
 
 // create & initialize a list of sleeping threads
+struct list_elem *e;
 struct list sleep_list;
 list_init(sleep_list);
 
@@ -96,16 +97,39 @@ timer_sleep (int64_t ticks)
   // get timer tick amount
   int64_t start = timer_ticks();
   // get thread
-  struct thread *t = thread_current();
+  struct thread *st = thread_current();
 
   ASSERT (intr_get_level () == INTR_ON);
   // disable interrupts to block thread
   enum intr_level old_level = intr_disable ();
   // set t's wakeup tick
-  t->thread_set_ticks(start+ticks);
+  st->thread_set_sleep(start+ticks);
 
+  for(e = list_begin(&sleep_list); e != list_end(&sleep_list); e = list_next(e)){
+    //Notice one parameter is the struct thread (or whatever you're using)
+    // list element -> list entry -> thread
+    struct thread *t = list_entry (e, struct thread, list_elem);
+    // handle if inserting as head
+
+    // thread -> list element
+    if(start+ticks <= t->thread_get_sleep()){
+      if(t->is_head()){
+        list_push_front(sleep_list, ts);
+        t->block();
+        break;
+      }
+      list_insert(t, st)
+      t->block();
+      break;
+    }
+    //(can use other lists by switching which elem is used); 
+
+    
+    // compare thread t awakeTime to ticks
+    // if time to awake, unblock() and move from sleeping list to ready list  
+  }
   // TODO: add thread t to a list of sleeping threads sorted by sleep duration
-
+  list_push_front(&sleep_list, struct list_elem *temp = t);
 
   // sleep_list.push_back(&t);
 
@@ -195,21 +219,22 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick();
-  while(true){
+  int64_t tick = timer_ticks();
   // look through blocked thread list
   // assuming list is sorted, check first thread
-    //Iterate through a list and get a list entry
-    struct list_elem * e;
-    for (e = list_begin(&myList1); e != list_end(&myList1); e = list_next(e)){
+  //Iterate through a list and get a list entry
+  struct list_elem * e;
+  for (e = list_begin(&sleep_list); e != list_end(&sleep_list); e = list_next(e)){
     //Notice one parameter is the struct thread (or whatever you're using)
-    struct thread *t = list_entry (e, struct thread, listElem1);
-    //(can use other lists by switching which elem is used); 
-
-    
+    struct thread *t = list_entry (e, struct thread, list_elem);
+    if(tick >= t->thread_get_sleep()){
+      t->thread_set_ticks(0);
+      t->unblock();
+      list_remove(e);
+      break;
+    }
     // compare thread t awakeTime to ticks
     // if time to awake, unblock() and move from sleeping list to ready list  
-    }
-
   }
 
 }
