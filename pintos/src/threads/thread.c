@@ -356,12 +356,12 @@ thread_get_priority (void)
   return thread_current ()->priority;
 }
 
-void thread_set_sleep(int64_t ticks){
-  thread_current()->sleep_ticks = ticks;
+void thread_set_sleep(struct thread *t, int64_t ticks){
+  t->sleep_ticks = ticks;
 }
 
-int64_t thread_get_sleep(void){
-  return thread_current()->sleep_ticks;
+int64_t thread_get_sleep(struct thread* t){
+  return t->sleep_ticks;
 }
 /* Sets the current thread's nice value to NICE. */
 void
