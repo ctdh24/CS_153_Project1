@@ -49,7 +49,6 @@ struct kernel_thread_frame
 static long long idle_ticks;    /* # of timer ticks spent idle. */
 static long long kernel_ticks;  /* # of timer ticks in kernel threads. */
 static long long user_ticks;    /* # of timer ticks in user programs. */
-static long long sleep_ticks;   // tick # to awake in timer.c
 
 /* Scheduling. */
 #define TIME_SLICE 4            /* # of timer ticks to give each thread. */
@@ -361,7 +360,7 @@ void thread_set_sleep(int64_t ticks){
   thread_current()->sleep_ticks = ticks;
 }
 
-int thread_get_sleep(){
+int64_t thread_get_sleep(void){
   return thread_current()->sleep_ticks;
 }
 /* Sets the current thread's nice value to NICE. */
