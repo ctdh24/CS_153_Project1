@@ -30,6 +30,9 @@ static void busy_wait (int64_t loops);
 static void real_time_sleep (int64_t num, int32_t denom);
 static void real_time_delay (int64_t num, int32_t denom);
 
+// List of sleeping threads
+struct list sleep_list;
+
 /* Sets up the timer to interrupt TIMER_FREQ times per second,
    and registers the corresponding interrupt. */
 void
@@ -91,15 +94,18 @@ timer_sleep (int64_t ticks)
 {
   int64_t start = timer_ticks ();
   // get thread
-  // 	struct thread *t = current_thread();
+  struct thread *t = thread_current();
   // figure out wake timer (timer_ticks())
   // 	awakeTime;
 
   ASSERT (intr_get_level () == INTR_ON);
-  // 	curState = intr_disable()
+  // disable interrupts to block thread
+  // 	curState = intr_disable() 
   // add thread t to a list of sleeping threads
+  // 	
   // can order list by awakeTime
   // put thread to sleep -> Block()
+  // 	t.thread_block();
   while (timer_elapsed (start) < ticks) 
     thread_yield ();
 

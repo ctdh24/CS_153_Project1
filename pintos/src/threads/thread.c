@@ -345,6 +345,7 @@ thread_set_priority (int new_priority)
 {
   //if (thread_current ()->priority != "highest") thread_yield();
   thread_current ()->priority = new_priority;
+  //if (thread_current ()->priority != "highest priority") thread_yield();
 }
 
 /* Returns the current thread's priority. */

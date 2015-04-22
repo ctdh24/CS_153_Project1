@@ -6,11 +6,9 @@
 				   
 ---- GROUP ----
 
->> Fill in the names and email addresses of your group members.
-
 Calvin Huynn <chuyn006@ucr.edu> <861015448>
 Jeffrey Chen <jchen086@ucr.edu> <861021330>
-Derrick Lam <dlam012@ucr.edu>
+Derrick Lam <dlam012@ucr.edu> <861005721>
 
 ---- PRELIMINARIES ----
 
@@ -30,26 +28,71 @@ Derrick Lam <dlam012@ucr.edu>
 >> `struct' member, global or static variable, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
 
+thread_foreach()
+	Modified to be called during the interrupt so that the list of
+	threads is cycled through and each thread is waken up at the
+	correct time
+timer_sleep()
+	Modified to only block the thread upon execution of the function.
+	Unblocking will then be handled by the interrupt calling thread_foreach()
+timer_interrupt()
+	Modified to unblock threads as well as keep track of ticks.
+
 ---- ALGORITHMS ----
 
 >> A2: Briefly describe what happens in a call to timer_sleep(),
 >> including the effects of the timer interrupt handler.
 
+The goal of timer_sleep() is to stop executing the current thread 
+for x-number of ticks. We place the thread onto a list of blocked 
+threads. After a set amount of ticks, the thread is unblocked and
+then placed on a ready list. This implementation may have a slight
+delay due to the latency present when blocking, unblocking, and then
+waiting for the thread to resume running. However, it is far better 
+than the provided timer_sleep() function, because the provided 
+implementation stayed in a while loop, constantly calling
+thread_yield() until the current number of ticks exceeded the 
+required amount of ticks.
+
 >> A3: What steps are taken to minimize the amount of time spent in
 >> the timer interrupt handler?
+
+The interrupt handler interrupts every tick to increment the tick
+counter. It will also check the blocked threads in the blocked thread
+list and unblock them if their sleep duration is over. By sorting the 
+blocked thread list by lowest remaining sleep time, we only need to
+check the first element in the list to determine if we need to unblock
+any threads at all. 
 
 ---- SYNCHRONIZATION ----
 
 >> A4: How are race conditions avoided when multiple threads call
 >> timer_sleep() simultaneously?
 
+Using the list structure allows the threads to be kept in an orderly
+fashion. When a thread is added to the blocked list, interrupts will disabled
+so that there will be no conflicts or other issues. By utilizing assert
+statements, it can be made absolutely certain that the interrupts are
+disabled during this critical section.
+
 >> A5: How are race conditions avoided when a timer interrupt occurs
 >> during a call to timer_sleep()?
+
+Interrupts will be disabled during the critical section when a thread
+is added to the blocked list. This has a side effect of delaying any
+possible unblocking done during the interrupt, but hopefully it will
+be a negligable amount of delay. 
 
 ---- RATIONALE ----
 
 >> A6: Why did you choose this design?  In what ways is it superior to
 >> another design you considered?
+
+We chose to minimize the interupt times through the implementation of a 
+wait and ready list. Blocking threads avoid waiting for ticks if we had 
+still implemented thread_yield(). The implementation of a sorted list of
+objects avoids waiting conflicts while minimizing time spent looking for
+a thread to unblock.
 
 			 PRIORITY SCHEDULING
 			 ===================
@@ -60,20 +103,67 @@ Derrick Lam <dlam012@ucr.edu>
 >> `struct' member, global or static variable, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
 
+int donated_priority
+	Included in thread.h to ensure that the priority variable is not overwritten
+	when the thread is donated to. 
+
+thread_set_priority()
+	Changed to include locks to avoid possible race conditions when setting
+	priority happens at the same time a lock is removed. 
+thread_get_priority()
+	The higher value between priority and donated_priority is returned.
+
 >> B2: Explain the data structure used to track priority donation.
 >> Use ASCII art to diagram a nested donation.  (Alternately, submit a
 >> .png file.)
+
+A thread on the waiting list will donate it's priority to a thread on 
+the ready list that it is waiting on to run first.
+
+==========Before==========
+Ready List    Waiting list
+P2 [mid]      P3 [high]-
+                       |
+P1 [low]<---------------
+
+==========After===========
+Ready List    Waiting list
+P1 [high]<--  P3 [high]
+            |____|  
+P2 [mid]
+
+In this example, P2 is initially the thread with the highest priority,
+and as a result, is next to begin running. However, due to P3 waiting on
+P1, and P3 having a high priority, P1's priority is upgraded to what P3's is,
+and the order in the ready list is updated to reflect this.
 
 ---- ALGORITHMS ----
 
 >> B3: How do you ensure that the highest priority thread waiting for
 >> a lock, semaphore, or condition variable wakes up first?
 
+We make sure that when the threads are added to the priority list,
+we need to order the list from highest to lowest priority. That way, 
+we make sure that the thread with the highest priority wakes up first.
+
 >> B4: Describe the sequence of events when a call to lock_acquire()
 >> causes a priority donation.  How is nested donation handled?
 
+When a thread calls lock_acquire(), any other threads dependent on the
+main thread that have a higher priority than the locked thread will 
+allocate a temporary priority to the locked thread to have the locked
+thread unlock faster so that the dependent thread can run. In the case
+of a nested donation, the highest priority dependent thread will propogate
+its high priority value upward to allow the lock thread to process at
+an expedited priority and unlock faster.
+
 >> B5: Describe the sequence of events when lock_release() is called
 >> on a lock that a higher-priority thread is waiting for.
+
+When lock_release() is called, the locked thread and all of it's dependents
+regain their initial priority. From there, the list of threads will then be
+sorted based upon these new priorities, placing the higher-priority thread
+higher up in the ready queue.
 
 ---- SYNCHRONIZATION ----
 
@@ -81,10 +171,23 @@ Derrick Lam <dlam012@ucr.edu>
 >> how your implementation avoids it.  Can you use a lock to avoid
 >> this race?
 
+There is a possibility for a race condition when calling thread_set_priority()
+during the period when a thread is the process of restoring its own priority
+when any donated priority from a locked thread is released. The inverse needs to
+be handled as well, because if the thread's priority is increased, any donation
+must be based on this new priority. The type of lock that needs to be used has to be 
+on a thread-by-thread basis.
+
 ---- RATIONALE ----
 
 >> B7: Why did you choose this design?  In what ways is it superior to
 >> another design you considered?
+
+This particular decision to keep the priority list sorted is a better implementation
+than leaving it unsorted and having to constantly search through the entire list
+for the thread with the highest priority. This will be especially beneficial
+in the case where there are numerous threads and traversing through the list becomes
+a significant computational task.
 
 			  ADVANCED SCHEDULER
 			    (If Attempted)
