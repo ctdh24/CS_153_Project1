@@ -357,11 +357,11 @@ thread_get_priority (void)
   return thread_current ()->priority;
 }
 
-int thread_set_sleep(int64_t ticks){
+void thread_set_sleep(int64_t ticks){
   thread_current()->sleep_ticks = ticks;
 }
 
-int thread_get_sleep(int64_t ticks){
+int thread_get_sleep(){
   return thread_current()->sleep_ticks;
 }
 /* Sets the current thread's nice value to NICE. */
