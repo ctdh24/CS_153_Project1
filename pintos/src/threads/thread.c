@@ -352,8 +352,9 @@ thread_set_priority (int new_priority)
 int
 thread_get_priority (void) 
 {
-  //if (thread ()->priority < donated_priority) return donated_priority
-  return thread_current ()->priority;
+  if (thread_current ()->priority < thread_current() -> donated_priority) 
+    return thread_current() -> donated_priority;
+  return thread_current ()-> priority;
 }
 
 /* Sets the current thread's nice value to NICE. */
@@ -498,8 +499,12 @@ next_thread_to_run (void)
 {
   if (list_empty (&ready_list))
     return idle_thread;
-  else
-    return list_entry (list_pop_front (&ready_list), struct thread, elem);
+  else{
+    //return list_entry (list_pop_front (&ready_list), struct thread, elem);
+    struct list_elem *max = list_max(&ready_list, list_less_func *less, NULL );
+    list_remove(max);
+    return list_entry (max, struct thread, elem);
+  }
 }
 
 /* Completes a thread switch by activating the new thread's page
