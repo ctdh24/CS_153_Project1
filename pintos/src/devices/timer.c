@@ -95,17 +95,14 @@ timer_sleep (int64_t ticks)
 {
   // get timer tick amount
   int64_t start = timer_ticks();
-  // get thread
-  struct thread *st = thread_current();
-
   ASSERT (intr_get_level () == INTR_ON);
   // Turn interrupts off temporarily to
   enum intr_level old_level = intr_disable ();
   // calculate ticks to stop sleep
-  st->sleep_ticks = timer_ticks() + ticks;
+  thread_current()->sleep_ticks = start + ticks;
   // insert thread into sleep list
   list_insert_ordered(&sleep_list, &thread_current()->elem,
-          (list_less_func *) &COMPARE_TICKS, NULL);
+      &COMPARE_TICKS, NULL);
   // block thread
   thread_block();
   // set turn interrupts back on
