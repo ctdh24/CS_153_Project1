@@ -102,7 +102,7 @@ timer_sleep (int64_t ticks)
   // Turn interrupts off temporarily to
   enum intr_level old_level = intr_disable ();
   // calculate ticks to stop sleep
-  st->ticks = timer_ticks() + ticks;
+  st->sleep_ticks = timer_ticks() + ticks;
   // insert thread into sleep list
   list_insert_ordered(&sleep_list, &thread_current()->elem,
           (list_less_func *) &COMPARE_TICKS, NULL);
@@ -195,7 +195,7 @@ timer_interrupt (struct intr_frame *args UNUSED)
   struct list_elem * e = list_begin(&sleep_list);
   while (e != list_end(&sleep_list)){
     struct thread *t = list_entry(e, struct thread, elem);      
-    if (ticks < t->ticks) 
+    if (ticks < t->sleep_ticks) 
         break;
     // remove from sleep_list
     list_remove(e); 
