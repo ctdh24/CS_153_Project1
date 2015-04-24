@@ -99,49 +99,17 @@ timer_sleep (int64_t ticks)
   struct thread *st = thread_current();
 
   ASSERT (intr_get_level () == INTR_ON);
-  // disable interrupts to block thread
+  // Turn interrupts off temporarily to
   enum intr_level old_level = intr_disable ();
-  // set t's wakeup tick
-  st->sleep_ticks = (start+ticks);
-  struct list_elem *e;
-  // insert current thread into sleep_list sorted by sleep time 
-  for(e = list_begin(&sleep_list); e != list_end(&sleep_list); e = list_next(e)){
-    //Notice one parameter is the struct thread (or whatever you're using)
-    // list -> list element -> list entry -> thread
-    struct thread *t = list_entry (e, struct thread, elem);
-    // handle if inserting as head
-
-    // thread -> list element
-    if(start+ticks <= t->sleep_ticks){
-      if(e == list_begin(&sleep_list)){
-        list_push_front(&sleep_list, &st->elem);
-        thread_block();
-        break;
-      }
-      list_insert(e, thread_current());
-      thread_block();
-      break;
-    }
-    //(can use other lists by switching which elem is used); 
-
-    
-    // compare thread t awakeTime to ticks
-    // if time to awake, unblock() and move from sleeping list to ready list  
-  }
-/*
-  // TODO: add thread t to a list of sleeping threads sorted by sleep duration
-  list_push_front(&sleep_list, struct list_elem *temp = t);
-
-  // sleep_list.push_back(&t);
-
-  // block thread until woken
-  t->thread_block();
-  // enable interrupts
+  // calculate ticks to stop sleep
+  st->ticks = timer_ticks() + ticks;
+  // insert thread into sleep list
+  list_insert_ordered(&sleep_list, &thread_current()->elem,
+          (list_less_func *) &COMPARE_TICKS, NULL);
+  // block thread
+  thread_block();
+  // set turn interrupts back on
   intr_set_level(old_level);
-  // OLD CODE
-  //while (timer_elapsed (start) < ticks) 
-  // thread_yield ();
-*/
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -224,20 +192,17 @@ timer_interrupt (struct intr_frame *args UNUSED)
   // look through blocked thread list
   // assuming list is sorted, check first thread
   //Iterate through a list and get a list entry
-  struct list_elem * e;
-  for (e = list_begin(&sleep_list); e != list_end(&sleep_list); e = list_next(e)){
-    //Notice one parameter is the struct thread (or whatever you're using)
-    struct thread *t = list_entry (e, struct thread, elem);
-    if(tick >= t->sleep_ticks){
-      t->sleep_ticks = 0;
-      thread_unblock(t);
-      list_remove(e);
-      break;
-    }
-    // compare thread t awakeTime to ticks
-    // if time to awake, unblock() and move from sleeping list to ready list  
+  struct list_elem * e = list_begin(&sleep_list);
+  while (e != list_end(&sleep_list)){
+    struct thread *t = list_entry(e, struct thread, elem);      
+    if (ticks < t->ticks) 
+        break;
+    // remove from sleep_list
+    list_remove(e); 
+    // unblock
+    thread_unblock(t); 
+    e = list_begin(&sleep_list);
   }
-
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer
