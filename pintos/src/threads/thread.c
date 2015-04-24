@@ -601,7 +601,7 @@ bool COMPARE_TICKS (const struct list_elem *a, const struct list_elem *b,
   void *aux UNUSED){
   struct thread *ta = list_entry(a, struct thread, elem);
   struct thread *tb = list_entry(b, struct thread, elem);
-  if (ta->ticks < tb->ticks){
+  if (ta->sleep_ticks < tb->sleep_ticks){
     return true;
   }
   return false;
