@@ -248,7 +248,7 @@ thread_unblock (struct thread *t)
   ASSERT (t->status == THREAD_BLOCKED);
   //changed to reduce sorting
   //list_push_back (&ready_list, &t->elem);
-  list_insert_ordered(&ready_list, &t->elem);
+  list_insert_ordered(&ready_list, &t->elem, &COMPARE_PRIORITY, NULL);
   list_in
   t->status = THREAD_READY;
   intr_set_level (old_level);
@@ -320,7 +320,7 @@ thread_yield (void)
 
   old_level = intr_disable ();
   if (cur != idle_thread) {
-    list_insert_ordered(&ready_list, &cur->elem);
+    list_insert_ordered(&ready_list, &cur->elem, &COMPARE_PRIORITY, NULL);;
 	//list_push_back (&ready_list, &cur->elem);
   }
   cur->status = THREAD_READY;
@@ -350,7 +350,7 @@ void
 thread_set_priority (int new_priority) 
 {
   //if (thread_current ()->priority != "highest") thread_yield();
-  top_priority = list_max(&all_list, &COMPARE_PRIORITY, NULL);
+  int top_priority = list_max(&all_list, &COMPARE_PRIORITY, NULL);
   if (thread_current ()->priority == top_priority)
 	thread_current ()->priority = new_priority;
   else thread_yield();
@@ -644,6 +644,6 @@ void test_max_priority(void){
 void donate_priority(void){
 
 }
-void remove_lock(struct lock *){
+void remove_lock(struct lock *lock) {
   
 }
