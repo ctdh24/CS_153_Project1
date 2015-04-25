@@ -617,8 +617,10 @@ bool COMPARE_PRIORITY (const struct list_elem *a, const struct list_elem *b,
   void *aux UNUSED){
   struct thread *ta = list_entry(a, struct thread, elem);
   struct thread *tb = list_entry(b, struct thread, elem);
-  int ap = ta.thread_get_priority();
-  int bp = tb.thread_get_priority();
+  int ap;
+  if (ta -> priority < ta -> donated_priority) ? ap = ta -> donated_priority : ap = donated_priority;
+  int bp;
+  if (tb -> priority < tb -> donated_priority) ? bp = tb -> donated_priority : bp = donated_priority;
   if (ap < bp){
     return true;
   }
