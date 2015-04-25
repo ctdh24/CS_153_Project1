@@ -630,3 +630,13 @@ bool COMPARE_PRIORITY (const struct list_elem *a, const struct list_elem *b,
   }
   return false;
 }
+
+void test_max_priority(void){
+
+}
+void donate_priority(void){
+
+}
+void remove_lock(struct lock *){
+  
+}
