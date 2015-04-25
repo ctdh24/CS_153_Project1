@@ -99,7 +99,7 @@ struct thread
     int64_t sleep_ticks;                // tick # to awake in timer.c
     //struct list_elem *sleep_elem;       // iterate through sleep_list
     struct lock * wait_lock;            // lock
-    struct list donation_list           // every thread has a donation list
+    struct list donation_list;           // every thread has a donation list
     struct list_elem donation_elem;     // iterate through donation_list
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
