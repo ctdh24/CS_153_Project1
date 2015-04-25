@@ -32,7 +32,7 @@ static void real_time_delay (int64_t num, int32_t denom);
 
 // create & initialize a list of sleeping threads
 static struct list sleep_list;
-list_init(&sleep_list);
+
 
 /* Sets up the timer to interrupt TIMER_FREQ times per second,
    and registers the corresponding interrupt. */
@@ -41,6 +41,7 @@ timer_init (void)
 {
   pit_configure_channel (0, 2, TIMER_FREQ);
   intr_register_ext (0x20, timer_interrupt, "8254 Timer");
+  list_init(&sleep_list);
 }
 
 /* Calibrates loops_per_tick, used to implement brief delays. */
