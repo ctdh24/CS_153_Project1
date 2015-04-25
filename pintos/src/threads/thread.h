@@ -144,5 +144,8 @@ int thread_get_load_avg (void);
 bool COMPARE_TICKS (const struct list_elem *a,
     const struct list_elem *b,
     void *aux UNUSED);
+bool COMPARE_PRIORITY (const struct list_elem *a, 
+	const struct list_elem *b,
+	void *aux UNUSED);
 
 #endif /* threads/thread.h */
