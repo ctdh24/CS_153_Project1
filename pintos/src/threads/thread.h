@@ -88,12 +88,19 @@ struct thread
     char name[16];                      /* Name (for debugging purposes). */
     uint8_t *stack;                     /* Saved stack pointer. */
     int priority;                       /* Priority. */
-    int donated_priority;               /*donated priority*/
-    int64_t sleep_ticks;   // tick # to awake in timer.c
     struct list_elem allelem;           /* List element for all threads list. */
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
-    struct list_elem *sleep_elem;
+    
+
+    // Our added variables
+    int init_priority;                  // new threads have high priority
+    int donated_priority;               // donated priority
+    int64_t sleep_ticks;                // tick # to awake in timer.c
+    //struct list_elem *sleep_elem;       // iterate through sleep_list
+    struct lock * wait_lock;            // lock
+    struct list donation_list           // every thread has a donation list
+    struct list_elem donation_elem;     // iterate through donation_list
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
@@ -147,5 +154,9 @@ bool COMPARE_TICKS (const struct list_elem *a,
 bool COMPARE_PRIORITY (const struct list_elem *a, 
 	const struct list_elem *b,
 	void *aux UNUSED);
+
+void test_max_priority(void);
+void donate_priority(void);
+void remove_lock(struct lock *);
 
 #endif /* threads/thread.h */
