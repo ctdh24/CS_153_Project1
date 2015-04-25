@@ -71,6 +71,7 @@ static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
 
+
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
    general and it is possible in this case only because loader.S
@@ -357,6 +358,13 @@ thread_get_priority (void)
   return thread_current ()-> priority;
 }
 
+void thread_set_sleep(struct thread *t, int64_t ticks){
+  t->sleep_ticks = ticks;
+}
+
+int64_t thread_get_sleep(struct thread* t){
+  return t->sleep_ticks;
+}
 /* Sets the current thread's nice value to NICE. */
 void
 thread_set_nice (int nice UNUSED) 
@@ -593,3 +601,14 @@ allocate_tid (void)
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
+
+// Comparator function for sorting a sleep_list by ticks remaining
+bool COMPARE_TICKS (const struct list_elem *a, const struct list_elem *b,
+  void *aux UNUSED){
+  struct thread *ta = list_entry(a, struct thread, elem);
+  struct thread *tb = list_entry(b, struct thread, elem);
+  if (ta->sleep_ticks < tb->sleep_ticks){
+    return true;
+  }
+  return false;
+}

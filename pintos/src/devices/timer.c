@@ -30,8 +30,9 @@ static void busy_wait (int64_t loops);
 static void real_time_sleep (int64_t num, int32_t denom);
 static void real_time_delay (int64_t num, int32_t denom);
 
-// List of sleeping threads
-struct list sleep_list;
+// create & initialize a list of sleeping threads
+static struct list sleep_list;
+
 
 /* Sets up the timer to interrupt TIMER_FREQ times per second,
    and registers the corresponding interrupt. */
@@ -40,6 +41,7 @@ timer_init (void)
 {
   pit_configure_channel (0, 2, TIMER_FREQ);
   intr_register_ext (0x20, timer_interrupt, "8254 Timer");
+  list_init(&sleep_list);
 }
 
 /* Calibrates loops_per_tick, used to implement brief delays. */
@@ -92,23 +94,20 @@ timer_elapsed (int64_t then)
 void
 timer_sleep (int64_t ticks) 
 {
-  int64_t start = timer_ticks ();
-  // get thread
-  struct thread *t = thread_current();
-  // figure out wake timer (timer_ticks())
-  // 	awakeTime;
-
+  // get timer tick amount
+  int64_t start = timer_ticks();
   ASSERT (intr_get_level () == INTR_ON);
-  // disable interrupts to block thread
-  // 	curState = intr_disable() 
-  // add thread t to a list of sleeping threads
-  // 	
-  // can order list by awakeTime
-  // put thread to sleep -> Block()
-  // 	t.thread_block();
-  while (timer_elapsed (start) < ticks) 
-    thread_yield ();
-
+  // Turn interrupts off temporarily to
+  enum intr_level old_level = intr_disable ();
+  // calculate ticks to stop sleep
+  thread_current()->sleep_ticks = start + ticks;
+  // insert thread into sleep list
+  list_insert_ordered(&sleep_list, &thread_current()->elem,
+      &COMPARE_TICKS, NULL);
+  // block thread
+  thread_block();
+  // set turn interrupts back on
+  intr_set_level(old_level);
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -180,17 +179,28 @@ timer_print_stats (void)
 {
   printf ("Timer: %"PRId64" ticks\n", timer_ticks ());
 }
-
+
 /* Timer interrupt handler. */
 static void
 timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
-  thread_tick ();
-  // look through list
-  // compare thread t awakeTime to ticks
-  // if time to awake, unblock() and remove from sleeping list
-  // PART B - run thread if highest priority
+  thread_tick();
+  int64_t tick = timer_ticks();
+  // look through blocked thread list
+  // assuming list is sorted, check first thread
+  //Iterate through a list and get a list entry
+  struct list_elem * e = list_begin(&sleep_list);
+  while (e != list_end(&sleep_list)){
+    struct thread *t = list_entry(e, struct thread, elem);      
+    if (ticks < t->sleep_ticks) 
+        break;
+    // remove from sleep_list
+    list_remove(e); 
+    // unblock
+    thread_unblock(t); 
+    e = list_begin(&sleep_list);
+  }
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer
