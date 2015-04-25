@@ -249,7 +249,6 @@ thread_unblock (struct thread *t)
   //changed to reduce sorting
   //list_push_back (&ready_list, &t->elem);
   list_insert_ordered(&ready_list, &t->elem, &COMPARE_PRIORITY, NULL);
-  list_in
   t->status = THREAD_READY;
   intr_set_level (old_level);
 }
@@ -350,8 +349,9 @@ void
 thread_set_priority (int new_priority) 
 {
   //if (thread_current ()->priority != "highest") thread_yield();
-  int top_priority = list_max(&all_list, &COMPARE_PRIORITY, NULL);
-  if (thread_current ()->priority == top_priority)
+  list_elem *top_priority = list_max(&all_list, &COMPARE_PRIORITY, NULL);
+  int tp = list_entry(top_priority, struct thread, allelem)
+  if (thread_current ()->priority == tp)
 	thread_current ()->priority = new_priority;
   else thread_yield();
 }
