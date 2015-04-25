@@ -509,7 +509,7 @@ next_thread_to_run (void)
     return idle_thread;
   else{
     //return list_entry (list_pop_front (&ready_list), struct thread, elem);
-    struct list_elem *max = list_max(&ready_list, list_less_func *less, NULL );
+    struct list_elem *max = list_max(&ready_list, &COMPARE_PRIORITY, NULL );
     list_remove(max);
     return list_entry (max, struct thread, elem);
   }
@@ -608,6 +608,18 @@ bool COMPARE_TICKS (const struct list_elem *a, const struct list_elem *b,
   struct thread *ta = list_entry(a, struct thread, elem);
   struct thread *tb = list_entry(b, struct thread, elem);
   if (ta->sleep_ticks < tb->sleep_ticks){
+    return true;
+  }
+  return false;
+}
+
+bool COMPARE_PRIORITY (const struct list_elem *a, const struct list_elem *b,
+  void *aux UNUSED){
+  struct thread *ta = list_entry(a, struct thread, elem);
+  struct thread *tb = list_entry(b, struct thread, elem);
+  int ap = ta.thread_get_priority();
+  int bp = tb.thread_get_priority();
+  if (ap < bp){
     return true;
   }
   return false;
