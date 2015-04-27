@@ -209,7 +209,8 @@ thread_create (const char *name, int priority,
 
   /* Add to run queue. */
   thread_unblock (t);
-
+  
+  test_max_priority();
   return tid;
 }
 
@@ -348,12 +349,18 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
+  enum intr_level old_level = intr_disable();
   //if (thread_current ()->priority != "highest") thread_yield();
   struct list_elem *top_priority = list_max(&all_list, &COMPARE_PRIORITY, NULL);
   int tp = list_entry(top_priority, struct thread, allelem);
-  if (thread_current ()->priority == tp)
-	thread_current ()->priority = new_priority;
-  else thread_yield();
+  if (thread_current()->priority >= tp){
+	thread_current()->priority = new_priority;
+	// donate_priority();
+  }
+  else{
+	test_max_priority();	
+  }
+  intr_set_level(old_level);
 }
 
 /* Returns the current thread's priority. */
@@ -515,10 +522,10 @@ next_thread_to_run (void)
   if (list_empty (&ready_list))
     return idle_thread;
   else{
-    //return list_entry (list_pop_front (&ready_list), struct thread, elem);
-    struct list_elem *max = list_max(&ready_list, &COMPARE_PRIORITY, NULL );
+    return list_entry (list_pop_front (&ready_list), struct thread, elem);
+    /*struct list_elem *max = list_max(&ready_list, &COMPARE_PRIORITY, NULL );
     list_remove(max);
-    return list_entry (max, struct thread, elem);
+    return list_entry (max, struct thread, elem);*/
   }
 }
 
@@ -639,8 +646,18 @@ bool COMPARE_PRIORITY (const struct list_elem *a, const struct list_elem *b,
 }
 
 void test_max_priority(void){
-
+  struct thread *t = list_entry(list_front(&ready_list), struct thread, elem);
+  if(intr_context()){
+	thread_ticks++;
+	if(thread_current()->priority < t->priority || (thread_ticks >= TIME_SLICE
+		&& thread_current()->priority == t->priority))
+		intr_yield_on_return();
+	return;
+  }
+  if(thread_current()->priority < t->priority)
+	thread_yield();
 }
+
 void donate_priority(void){
 
 }
