@@ -136,8 +136,8 @@ thread_tick (void)
     kernel_ticks++;
 
   /* Enforce preemption. */
-  if (++thread_ticks >= TIME_SLICE)
-    intr_yield_on_return ();
+//  if (++thread_ticks >= TIME_SLICE)
+//    intr_yield_on_return ();
 }
 
 /* Prints thread statistics. */
@@ -209,8 +209,9 @@ thread_create (const char *name, int priority,
 
   /* Add to run queue. */
   thread_unblock (t);
-  
+  old_level = intr_disable();
   test_max_priority();
+  intr_set_level(old_level);
   return tid;
 }
 
@@ -351,13 +352,13 @@ thread_set_priority (int new_priority)
 {
   enum intr_level old_level = intr_disable();
   //if (thread_current ()->priority != "highest") thread_yield();
-  struct list_elem *top_priority = list_max(&all_list, &COMPARE_PRIORITY, NULL);
-  int tp = list_entry(top_priority, struct thread, allelem);
-  if (thread_current()->priority >= tp){
-	thread_current()->priority = new_priority;
+  int old_priority = thread_current()->priority;
+  thread_current()->init_priority = new_priority;
+  refresh_priority();
+  if(old_priority < thread_current()->priority){
 	// donate_priority();
   }
-  else{
+  if(old_priority > thread_current()->priority){
 	test_max_priority();	
   }
   intr_set_level(old_level);
@@ -367,9 +368,10 @@ thread_set_priority (int new_priority)
 int
 thread_get_priority (void) 
 {
-  if (thread_current ()->priority < thread_current() -> donated_priority) 
-    return thread_current() -> donated_priority;
+  enum intr_level old_level = intr_disable();
+  intr_set_level(old_level);
   return thread_current ()-> priority;
+
 }
 
 void thread_set_sleep(struct thread *t, int64_t ticks){
@@ -496,6 +498,11 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
+
+  t->init_priority = priority;
+//t->wait_lock = NULL;
+//list_init(^t->donation_list);
+//sema_init(^t->thread_sema,0);
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and
@@ -631,18 +638,7 @@ bool COMPARE_PRIORITY (const struct list_elem *a, const struct list_elem *b,
   void *aux UNUSED){
   struct thread *ta = list_entry(a, struct thread, elem);
   struct thread *tb = list_entry(b, struct thread, elem);
-  int ap;
-  if (ta -> priority < ta -> donated_priority)
-	  ap = ta -> donated_priority;
-  else ap = ta -> priority;
-  int bp;
-  if (tb -> priority < tb -> donated_priority)
-	  bp = tb -> donated_priority; 
-  else bp = tb -> priority;
-  if (ap < bp){
-    return true;
-  }
-  return false;
+  return ta->priority > tb->priority;
 }
 
 void test_max_priority(void){
@@ -664,3 +660,10 @@ void donate_priority(void){
 void remove_lock(struct lock *lock) {
   
 }
+
+void refresh_priority(void){
+  struct thread *t = thread_current();
+  
+}
+
+

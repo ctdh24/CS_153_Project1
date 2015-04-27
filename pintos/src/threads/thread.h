@@ -95,7 +95,6 @@ struct thread
 
     // Our added variables
     int init_priority;                  // new threads have high priority
-    int donated_priority;               // donated priority
     int64_t sleep_ticks;                // tick # to awake in timer.c
     //struct list_elem *sleep_elem;       // iterate through sleep_list
     struct lock * wait_lock;            // lock
@@ -158,5 +157,5 @@ bool COMPARE_PRIORITY (const struct list_elem *a,
 void test_max_priority(void);
 void donate_priority(void);
 void remove_lock(struct lock *);
-
+void refresh_priority(void);
 #endif /* threads/thread.h */
