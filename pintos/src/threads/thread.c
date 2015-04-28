@@ -660,10 +660,8 @@ void donate_priority(void){
   struct thread *t = thread_current();
   struct lock *lck = t->wait_lock;
   while(lck && depth < depth_limit){
-  	depth++;
+ 	depth++;
   	if(!lck->holder || lck->holder->priority >= t->priority)
-  		return;
-  	if(lck->holder->priority >= t->priority)
   		return;
   	lck->holder->priority = t->priority;
   	t = lck->holder;
