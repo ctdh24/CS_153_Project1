@@ -250,7 +250,7 @@ thread_unblock (struct thread *t)
   ASSERT (t->status == THREAD_BLOCKED);
   //changed to reduce sorting
   //list_push_back (&ready_list, &t->elem);
-  list_insert_ordered(&ready_list, &t->elem, &COMPARE_PRIORITY, NULL);
+  list_insert_ordered(&ready_list, &t->elem, (list_less_func *) &COMPARE_PRIORITY, NULL);
   t->status = THREAD_READY;
   intr_set_level (old_level);
 }
@@ -321,7 +321,7 @@ thread_yield (void)
 
   old_level = intr_disable ();
   if (cur != idle_thread) {
-    list_insert_ordered(&ready_list, &cur->elem, &COMPARE_PRIORITY, NULL);;
+    list_insert_ordered(&ready_list, &cur->elem, (list_less_func *) &COMPARE_PRIORITY, NULL);
 	//list_push_back (&ready_list, &cur->elem);
   }
   cur->status = THREAD_READY;
@@ -356,7 +356,7 @@ thread_set_priority (int new_priority)
   thread_current()->init_priority = new_priority;
   refresh_priority();
   if(old_priority < thread_current()->priority){
-	// donate_priority();
+	donate_priority();
   }
   if(old_priority > thread_current()->priority){
 	test_max_priority();	
@@ -640,7 +640,6 @@ bool COMPARE_PRIORITY (const struct list_elem *a, const struct list_elem *b,
   struct thread *tb = list_entry(b, struct thread, elem);
   if(ta->priority > tb->priority)
 	return true;
-  else
 	return false;
 }
 
@@ -651,8 +650,9 @@ void test_max_priority(void){
   if(intr_context()){
 	thread_ticks++;
 	if(thread_current()->priority < t->priority || (thread_ticks >= TIME_SLICE
-		&& thread_current()->priority == t->priority))
+		&& thread_current()->priority == t->priority)){
 		intr_yield_on_return();
+	}
 	return;
   }
   if(thread_current()->priority < t->priority)
@@ -668,7 +668,7 @@ void remove_lock(struct lock *lock) {
 
 void refresh_priority(void){
   struct thread *t = thread_current();
-  
+  t->priority = t->init_priority;
 }
 
 
