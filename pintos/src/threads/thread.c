@@ -680,7 +680,7 @@ void refresh_priority(void){
   if(list_empty(&t->donation_list))
     return;
   struct thread *d = list_entry(list_max(&t->donation_list, &COMPARE_PRIORITY, NULL ), struct thread, donation_elem);
-  if(s->priority > t->priority)
+  if(d->priority > t->priority)
     t->priority = d->priority;
 }
 
