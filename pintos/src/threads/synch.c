@@ -299,7 +299,8 @@ cond_wait (struct condition *cond, struct lock *lock)
   ASSERT (lock_held_by_current_thread (lock));
   
   sema_init (&waiter.semaphore, 0);
-  list_push_back (&cond->waiters, &waiter.elem);
+  //list_push_back (&cond->waiters, &waiter.elem);
+  list_insert_ordered(&cond->waiters, &waiter.elem, &COMPARE_SEMA_PRIORITY, NULL);
   lock_release (lock);
   sema_down (&waiter.semaphore);
   lock_acquire (lock);
@@ -331,6 +332,7 @@ cond_signal (struct condition *cond, struct lock *lock UNUSED)
    An interrupt handler cannot acquire a lock, so it does not
    make sense to try to signal a condition variable within an
    interrupt handler. */
+
 void
 cond_broadcast (struct condition *cond, struct lock *lock) 
 {
@@ -339,4 +341,21 @@ cond_broadcast (struct condition *cond, struct lock *lock)
 
   while (!list_empty (&cond->waiters))
     cond_signal (cond, lock);
+}
+
+bool COMPARE_SEMA_PRIORITY (const struct list_elem *a, const struct list_elem *b,
+  void *aux UNUSED){
+  struct semaphore_elem *sem_a = list_entry(a, struct semaphore_elem, elem);
+  struct semaphore_elem *sem_b = list_entry(b, struct semaphore_elem, elem);
+  if(list_empty(&sem_a->semaphore.waiters)) return false;
+  if(list_empty(&sem_b->semaphore.waiters)) return true;
+  struct thread *tsa = list_entry(list_max(&sem_a->semaphore.waiters,
+								&COMPARE_PRIORITY, NULL ), struct thread, donation_elem);
+  struct thread *tsb = list_entry(list_max(&sem_b->semaphore.waiters, 
+								&COMPARE_PRIORITY, NULL ), struct thread, donation_elem);
+  if (tsa->priority > tsb->priority) 
+	  return true;
+  else 
+	  return false;
+  
 }
