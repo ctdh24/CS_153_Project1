@@ -496,9 +496,9 @@ init_thread (struct thread *t, const char *name, int priority)
   list_push_back (&all_list, &t->allelem);
 
   t->init_priority = priority;
-//t->wait_lock = NULL;
-//list_init(^t->donation_list);
-//sema_init(^t->thread_sema,0);
+  t->wait_lock = NULL;
+  list_init(&t->donation_list);
+  //sema_init(&t->thread_sema,0);
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and
@@ -671,7 +671,15 @@ void donate_priority(void){
   }
 }
 void remove_lock(struct lock *lock) {
-  
+  struct list_elem *e = list_begin(&thread_current()->donation_list);
+  struct list_elem *next;
+  while(e != list_end(&thread_current()->donation_list)){
+    struct thread *t = list_entry(e, struct thread, donation_elem);
+    next = list_next(e);
+    if(t->wait_lock == lock)
+      remove_lock(e);
+    e = next;
+  }
 }
 
 void refresh_priority(void){
