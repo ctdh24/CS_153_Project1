@@ -203,7 +203,7 @@ lock_acquire (struct lock *lock)
   if(lock->holder){
     thread_current()->wait_lock = lock;
     list_insert_ordered(&lock->holder->donation_list,&thread_current()->donation_elem,
-	COMPARE_PRIORITY, NULL);
+	&COMPARE_PRIORITY, NULL);
   }
 
   sema_down(&lock->semaphore);
@@ -337,7 +337,7 @@ cond_signal (struct condition *cond, struct lock *lock UNUSED)
   ASSERT (lock_held_by_current_thread (lock));
 
   if (!list_empty (&cond->waiters)){
-    list_sort(&cond->waiters, &COMPARE_SEMA_PRIORITY, NULL);
+    list_sort(&cond->waiters, &COMPARE_PRIORITY, NULL);
     sema_up (&list_entry (list_pop_front (&cond->waiters),
                           struct semaphore_elem, elem)->semaphore);
   }
