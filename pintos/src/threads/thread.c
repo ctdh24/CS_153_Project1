@@ -356,7 +356,7 @@ thread_set_priority (int new_priority)
   thread_current()->init_priority = new_priority;
   refresh_priority();
   if(old_priority < thread_current()->priority){
-	// donate_priority();
+	donate_priority();
   }
   if(old_priority > thread_current()->priority){
 	test_max_priority();	
@@ -657,7 +657,20 @@ void test_max_priority(void){
 }
 
 void donate_priority(void){
-
+  int depth = 0;
+  int depth_limit = 8;
+  struct thread *t = thread_current();
+  struct lock *l = t->wait_lock;
+  while(l && depth < depth_limit){
+	depth++;
+	if(!l->holder || l->holder->priority >= t->priority)
+		return;
+	if(l->holder->priority >= t->priority)
+		return;
+	l->holder->priority = t->priority;
+	t = l->holder;
+	l = t->wait_lock;
+  }
 }
 void remove_lock(struct lock *lock) {
   
@@ -665,7 +678,12 @@ void remove_lock(struct lock *lock) {
 
 void refresh_priority(void){
   struct thread *t = thread_current();
-  
+  t->priority = t->init_priority;
+  if(list_empty(&t->donation_list))
+	return;
+  struct thread *s = list_entry(list_front(&t->donation_list), struct thread, donation_elem);
+  if(s->priority > t->priority)
+	t->priority = s->priority;
 }
 
 
