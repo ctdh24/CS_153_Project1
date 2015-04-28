@@ -369,9 +369,9 @@ int
 thread_get_priority (void) 
 {
   enum intr_level old_level = intr_disable();
+  int temp = thread_current ()-> priority;
   intr_set_level(old_level);
-  return thread_current ()-> priority;
-
+  return temp;
 }
 
 void thread_set_sleep(struct thread *t, int64_t ticks){
@@ -638,10 +638,15 @@ bool COMPARE_PRIORITY (const struct list_elem *a, const struct list_elem *b,
   void *aux UNUSED){
   struct thread *ta = list_entry(a, struct thread, elem);
   struct thread *tb = list_entry(b, struct thread, elem);
-  return ta->priority > tb->priority;
+  if(ta->priority > tb->priority)
+	return true;
+  else
+	return false;
 }
 
 void test_max_priority(void){
+  if(list_empty(&ready_list))
+	return;
   struct thread *t = list_entry(list_front(&ready_list), struct thread, elem);
   if(intr_context()){
 	thread_ticks++;
