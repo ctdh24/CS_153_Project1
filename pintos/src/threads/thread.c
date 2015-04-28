@@ -339,11 +339,10 @@ thread_foreach (thread_action_func *func, void *aux)
   ASSERT (intr_get_level () == INTR_OFF);
 
   for (e = list_begin (&all_list); e != list_end (&all_list);
-       e = list_next (e))
-    {
-      struct thread *t = list_entry (e, struct thread, allelem);
-      func (t, aux);
-    }
+       e = list_next (e)){
+    struct thread *t = list_entry (e, struct thread, allelem);
+    func (t, aux);
+  }
 }
 
 /* Sets the current thread's priority to NEW_PRIORITY. */
@@ -356,10 +355,10 @@ thread_set_priority (int new_priority)
   thread_current()->init_priority = new_priority;
   refresh_priority();
   if(old_priority < thread_current()->priority){
-	donate_priority();
+    donate_priority();
   }
   if(old_priority > thread_current()->priority){
-	test_max_priority();	
+    test_max_priority();	
   }
   intr_set_level(old_level);
 }
@@ -368,10 +367,7 @@ thread_set_priority (int new_priority)
 int
 thread_get_priority (void) 
 {
-  enum intr_level old_level = intr_disable();
-  intr_set_level(old_level);
   return thread_current ()-> priority;
-
 }
 
 void thread_set_sleep(struct thread *t, int64_t ticks){
@@ -626,12 +622,12 @@ uint32_t thread_stack_ofs = offsetof (struct thread, stack);
 // Comparator function for sorting a sleep_list by ticks remaining
 bool COMPARE_TICKS (const struct list_elem *a, const struct list_elem *b,
   void *aux UNUSED){
-  struct thread *ta = list_entry(a, struct thread, elem);
-  struct thread *tb = list_entry(b, struct thread, elem);
-  if (ta->sleep_ticks < tb->sleep_ticks){
-    return true;
-  }
-  return false;
+    struct thread *ta = list_entry(a, struct thread, elem);
+    struct thread *tb = list_entry(b, struct thread, elem);
+    if (ta->sleep_ticks < tb->sleep_ticks){
+      return true;
+    }
+    return false;
 }
 
 bool COMPARE_PRIORITY (const struct list_elem *a, const struct list_elem *b,
@@ -643,34 +639,38 @@ bool COMPARE_PRIORITY (const struct list_elem *a, const struct list_elem *b,
 
 void test_max_priority(void){
   if(list_empty(&ready_list))
-	return;
+    return;
+
   struct thread *t = list_entry(list_front(&ready_list), struct thread, elem);
+
   if(intr_context()){
-	thread_ticks++;
-	if(thread_current()->priority < t->priority || (thread_ticks >= TIME_SLICE
-		&& thread_current()->priority == t->priority))
-		intr_yield_on_return();
-	return;
+  	thread_ticks++;
+  	if(thread_current()->priority < t->priority || (thread_ticks >= TIME_SLICE
+  		&& thread_current()->priority == t->priority))
+  		intr_yield_on_return();
+  	return;
   }
   if(thread_current()->priority < t->priority)
-	thread_yield();
+    thread_yield();
 }
 
 void donate_priority(void){
+  /*
   int depth = 0;
   int depth_limit = 8;
   struct thread *t = thread_current();
   struct lock *l = t->wait_lock;
   while(l && depth < depth_limit){
-	depth++;
-	if(!l->holder || l->holder->priority >= t->priority)
-		return;
-	if(l->holder->priority >= t->priority)
-		return;
-	l->holder->priority = t->priority;
-	t = l->holder;
-	l = t->wait_lock;
+  	depth++;
+  	if(!l->holder || l->holder->priority >= t->priority)
+  		return;
+  	if(l->holder->priority >= t->priority)
+  		return;
+  	l->holder->priority = t->priority;
+  	t = l->holder;
+  	l = t->wait_lock;
   }
+  */
 }
 void remove_lock(struct lock *lock) {
   
@@ -679,11 +679,11 @@ void remove_lock(struct lock *lock) {
 void refresh_priority(void){
   struct thread *t = thread_current();
   t->priority = t->init_priority;
-  if(list_empty(&t->donation_list))
-	return;
-  struct thread *s = list_entry(list_front(&t->donation_list), struct thread, donation_elem);
-  if(s->priority > t->priority)
-	t->priority = s->priority;
+  // if(list_empty(&t->donation_list))
+  //   return;
+  // struct thread *s = list_entry(list_front(&t->donation_list), struct thread, donation_elem);
+  // if(s->priority > t->priority)
+  //   t->priority = s->priority;
 }
 
 
